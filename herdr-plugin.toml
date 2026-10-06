@@ -1,0 +1,91 @@
+id = "macd2.keycaps"
+name = "Keycaps"
+version = "1.0.0"
+min_herdr_version = "0.9.0"
+description = "Your herdr keymap: a popup listing every binding in effect, plus the pane moves herdr has no actions for"
+platforms = ["linux", "macos"]
+
+# The popup surface. placement = "popup" keeps it transient: it takes all
+# terminal input, including Escape, and closes when the pager exits, without
+# disturbing the tiled layout.
+[[panes]]
+id = "keys"
+title = "Keycaps"
+placement = "popup"
+width = "70%"
+height = "80%"
+command = ["python3", "keycaps.py"]
+
+# Keybindings can only target actions, not panes, so this action is the shim
+# that opens the pane above. Bind it with type = "plugin_action".
+[[actions]]
+id = "show"
+title = "Show keybindings"
+contexts = ["pane", "workspace"]
+command = ["python3", "show.py"]
+
+# Moving a pane between tabs. Herdr can do it from the CLI but exposes no
+# keybinding action, and move_tab_* move whole tabs, not panes.
+[[panes]]
+id = "picker"
+title = "Move pane"
+placement = "popup"
+width = "50%"
+height = "40%"
+command = ["python3", "picker.py"]
+
+[[actions]]
+id = "move"
+title = "Move pane to tab"
+contexts = ["pane"]
+command = ["python3", "move.py"]
+
+# Swapping a pane with its neighbour: also CLI-only in herdr. One script backs
+# all four; it reads the direction from HERDR_PLUGIN_ACTION_ID.
+[[actions]]
+id = "swap-left"
+title = "Swap pane left"
+contexts = ["pane"]
+command = ["python3", "swap.py"]
+
+[[actions]]
+id = "swap-down"
+title = "Swap pane down"
+contexts = ["pane"]
+command = ["python3", "swap.py"]
+
+[[actions]]
+id = "swap-up"
+title = "Swap pane up"
+contexts = ["pane"]
+command = ["python3", "swap.py"]
+
+[[actions]]
+id = "swap-right"
+title = "Swap pane right"
+contexts = ["pane"]
+command = ["python3", "swap.py"]
+
+# Closing a tab. Herdr's confirm_close covers workspaces only, so the prompt
+# is ours.
+[[panes]]
+id = "confirm-close-tab"
+title = "Close tab"
+placement = "popup"
+width = "40%"
+height = "30%"
+command = ["python3", "confirm.py"]
+
+[[actions]]
+id = "close-tab"
+title = "Close tab (with confirmation)"
+contexts = ["pane"]
+command = ["python3", "close_tab.py"]
+
+# Evening out the panes. Herdr's pane resize only shifts a split by a relative
+# amount; setting ratios outright is socket-API only.
+[[actions]]
+id = "even"
+title = "Even out panes"
+contexts = ["pane"]
+command = ["python3", "even.py"]
