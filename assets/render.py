@@ -35,6 +35,9 @@ TEXT = (205, 214, 244)
 SUBTEXT = (108, 112, 134)
 TEAL = (148, 226, 213)
 
+# The address the README's install line already commits to.
+REPO = "github.com/macd2/herdr-keycaps"
+
 FONTS = Path(__file__).resolve().parent / "fonts"
 DISPLAY = str(FONTS / "Archivo[wdth,wght].ttf")
 DATA = str(FONTS / "IBMPlexMono-Regular.ttf")
@@ -269,10 +272,9 @@ def make_cheatsheet(path: Path):
     fy = h - 56
     d.line([(m, fy), (w - m, fy)], fill=RULE, width=1)
     foot = data(15)
-    tracked(d, (m, fy + 20), "KEYCAPS", foot, INK, 1.6)
-    d.text((m + 150, fy + 20), "built from herdr --default-config + config.toml",
-           font=foot, fill=GREY)
-    tail = f"{len(rows)} rows"
+    x = tracked(d, (m, fy + 20), "KEYCAPS", foot, INK, 1.6)
+    d.text((x + 26, fy + 20), REPO, font=foot, fill=INK)
+    tail = f"{len(rows)} rows  ·  built from herdr --default-config + config.toml"
     d.text((w - m - foot.getlength(tail), fy + 20), tail, font=foot, fill=GREY)
 
     img.save(path)
