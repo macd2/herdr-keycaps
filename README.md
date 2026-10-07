@@ -199,9 +199,15 @@ MIT
 `assets/render.py` draws the logo, banner and screenshot. The banner is
 1200x630, the format herdr uses for its own card.
 
-The wordmark is IBM Plex Sans, vendored under `assets/fonts/` with its OFL
-licence so the assets rebuild anywhere. Everything showing a terminal stays in
-the mono face the terminal actually uses. The screenshot comes
+The visual system is Instrument: paper ground, hairline drawing, and one red
+that only ever marks a measurement. The keycap is drawn orthographically rather
+than rendered, so the mark is the same object at any size.
+
+Archivo sets the wordmark and IBM Plex Mono the specification blocks, both
+vendored under `assets/fonts/` with their OFL licences so the assets rebuild
+anywhere. The screenshot keeps the terminal's own colours, because it documents
+what the popup actually shows; only the frame and caption around it belong to
+the brand. The screenshot comes
 from `keycaps.document()`, the same string the popup pages, so a published
 image cannot drift from what the plugin actually shows.
 
