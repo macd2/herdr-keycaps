@@ -59,6 +59,17 @@ python3 .../setup.py --dry-run           # print the plan, write nothing
 python3 .../setup.py --only-plugin-keys  # this plugin's keys, not the alt+ layer
 ```
 
+If you skip it, herdr cannot tell you: the install preview prints only herdr's
+own fields, and a build command's output is discarded unless the command fails,
+which aborts the install. So the plugin says it on the next server start instead
+- one notification, top right, naming the command, and only while *nothing* at
+all is bound. Bind a subset on purpose and it stays quiet. To silence it for
+good:
+
+```sh
+touch "$(herdr plugin config-dir macd2.keycaps)/no-reminder"
+```
+
 From inside a session you can reach the same script without the path:
 
 ```sh
