@@ -16,7 +16,7 @@ Nothing to configure beyond the bindings you want. The list builds itself from
 your own config, so it is right the moment you change a key.
 
 <p align="center">
-  <img src="assets/screenshot.png" alt="The Keycaps popup listing every binding, grouped by panes, tabs, workspaces and session" width="620">
+  <img src="assets/cheatsheet.png" alt="Keymap reference card listing every binding, grouped by commands, panes, tabs, workspaces and session" width="100%">
 </p>
 
 Your own commands come first. Herdr's config order opens with help, settings
@@ -196,7 +196,7 @@ MIT
 
 ## Assets
 
-`assets/render.py` draws the logo, banner and screenshot. The banner is
+`assets/render.py` draws the logo, banner and reference card. The banner is
 1200x630, the format herdr uses for its own card.
 
 The visual system is Instrument: paper ground, hairline drawing, and one red
@@ -205,11 +205,12 @@ than rendered, so the mark is the same object at any size.
 
 Archivo sets the wordmark and IBM Plex Mono the specification blocks, both
 vendored under `assets/fonts/` with their OFL licences so the assets rebuild
-anywhere. The screenshot keeps the terminal's own colours, because it documents
-what the popup actually shows; only the frame and caption around it belong to
-the brand. The screenshot comes
-from `keycaps.document()`, the same string the popup pages, so a published
-image cannot drift from what the plugin actually shows.
+anywhere.
+
+The reference card is typeset from `keycaps.entries()`, the same rows the popup
+formats, so a published card cannot drift from the plugin. Its column widths
+are measured from the longest entry rather than fixed, and the sections are
+split across the two columns on whole groups.
 
 ```sh
 python3 assets/render.py

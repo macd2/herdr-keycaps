@@ -275,7 +275,12 @@ def describe(action: str) -> str:
     return text[:1].upper() + text[1:]
 
 
-def render(path: Path) -> list[str]:
+def entries(path: Path) -> tuple[list[tuple[str, str, str, str]], str]:
+    """Every row as (section, direct chord, prefix chord, description).
+
+    Shared by the popup and by the printed reference card in assets/, so
+    both are built from one resolution of the config rather than two.
+    """
     config = user_config(path)
     keys = config.get("keys", {})
     overrides = keys if isinstance(keys, dict) else {}
@@ -337,6 +342,12 @@ def render(path: Path) -> list[str]:
     for title, entries in routed.items():
         for direct, leader, text in entries:
             rows.append((title.upper(), direct, leader, text))
+
+    return rows, prefix_key
+
+
+def render(path: Path) -> list[str]:
+    rows, prefix_key = entries(path)
 
     w1 = max([len(r[1]) for r in rows] + [8])
     w2 = max([len(r[2]) for r in rows] + [8])
