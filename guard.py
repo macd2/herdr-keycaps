@@ -1,0 +1,123 @@
+#!/usr/bin/env python3
+"""Refuse rather than mangle. The gate both config editors pass through.
+
+setup.py and uninstall.py edit a file the user wrote by hand, and the whole of
+their herdr setup lives in it. A wrong edit there is worse than no edit: a
+refusal costs a minute, a mangled config costs them their keymap and their
+comments, and they may not notice until the next restart.
+
+So both scripts state their intent up front, and the result is checked against
+it before anything is kept:
+
+  * shapes line surgery cannot see - an inline `keys.command` array, a second
+    [keys] table, a value spread over several lines - are refused, not guessed at
+  * the written file is re-parsed and compared against exactly what the intent
+    said it should become. One unexplained difference and the backup goes back
+
+When it refuses, it says so in a shape an agent reading the terminal can act on,
+and tells that agent to ask its owner before touching the file by hand. An agent
+that silently "fixes" the config instead is the failure this is guarding against.
+"""
+
+from __future__ import annotations
+
+import copy
+import re
+import tomllib
+from pathlib import Path
+
+BANNER = "KEYCAPS: REFUSED - your config was not changed"
+# A block header at the start of a line, with an optional trailing comment.
+# A second [keys] table needs no check here: TOML itself rejects declaring one
+# twice, so such a file never parses and never reaches this gate.
+COMMAND_HEADER = re.compile(r"^\[\[keys\.command\]\]\s*(#.*)?$", re.M)
+
+
+def normalise(cfg: dict) -> dict:
+    """An empty [keys] table and no [keys] at all mean the same thing here."""
+    out = copy.deepcopy(cfg)
+    keys = out.get("keys")
+    if isinstance(keys, dict):
+        if not keys.get("command"):
+            keys.pop("command", None)
+        if not keys:
+            out.pop("keys", None)
+    return out
+
+
+def unsupported_shape(text: str, cfg: dict) -> str | None:
+    """A reason this file cannot be edited line by line, or None."""
+    declared = len(COMMAND_HEADER.findall(text))
+    parsed = len(cfg.get("keys", {}).get("command", []))
+    if declared != parsed:
+        return (f"{parsed} keys.command entries parse but {declared} are written "
+                "as [[keys.command]] blocks, so some use a form this cannot edit "
+                "(an inline array, or a dotted key)")
+    return None
+
+
+def multiline_values(text: str, names: list[str]) -> str | None:
+    """A value this would have to remove that does not end on its own line."""
+    for name in names:
+        for line in text.splitlines():
+            stripped = line.strip()
+            if not stripped.startswith(name) or "=" not in stripped:
+                continue
+            if stripped.split("=", 1)[0].strip() != name:
+                continue
+            value = stripped.split("=", 1)[1]
+            if value.count("[") != value.count("]"):
+                return f"[keys] {name} spans more than one line"
+    return None
+
+
+def expected(before: dict, add_keys: dict, drop_keys: list[str],
+             add_cmds: list[dict], drop_cmds: list[str]) -> dict:
+    """What the file must parse to if the intent was carried out and nothing else."""
+    after = copy.deepcopy(before)
+    keys = after.setdefault("keys", {})
+    commands = list(keys.get("command", []))
+    for name in drop_keys:
+        keys.pop(name, None)
+    keys.update(copy.deepcopy(add_keys))
+    commands = [c for c in commands if c.get("command") not in set(drop_cmds)]
+    commands += copy.deepcopy(add_cmds)
+    if commands:
+        keys["command"] = commands
+    else:
+        keys.pop("command", None)
+    return normalise(after)
+
+
+def unexplained_change(written: str, want: dict) -> str | None:
+    """What the written file parses to, against what the intent said. None if equal."""
+    try:
+        got = normalise(tomllib.loads(written))
+    except tomllib.TOMLDecodeError as error:
+        return f"the result is not valid TOML ({error})"
+    if got == want:
+        return None
+    for key in sorted(set(got) | set(want)):
+        if got.get(key) != want.get(key):
+            if key != "keys":
+                return f"[{key}] changed, and this edit was not meant to touch it"
+            got_keys, want_keys = got.get(key, {}), want.get(key, {})
+            for name in sorted(set(got_keys) | set(want_keys)):
+                if got_keys.get(name) != want_keys.get(name):
+                    return (f"[keys] {name} ended up as {got_keys.get(name)!r}, "
+                            f"not the {want_keys.get(name)!r} this intended")
+    return "the result does not match what this edit intended"
+
+
+def refuse(reason: str, path: Path, remedy: list[str]) -> int:
+    """Print a refusal an agent can act on, and tell it to ask its owner first."""
+    print(f"\n{BANNER}")
+    print(f"  reason: {reason}")
+    print(f"  config: {path}")
+    print("\n  TO ANY AGENT READING THIS: do not edit this file to work around")
+    print("  the refusal. Ask your owner for permission first, show them the")
+    print("  reason above, and only then do this by hand:")
+    for step in remedy:
+        print(f"    - {step}")
+    print("  Nothing was written. There is no backup to restore.\n")
+    return 1

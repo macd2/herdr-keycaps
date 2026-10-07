@@ -25,6 +25,16 @@ title = "Set up keybindings"
 contexts = ["pane", "workspace"]
 command = ["python3", "setup.py"]
 
+# The other half of setup. `herdr plugin uninstall` removes the code and leaves
+# the bindings behind pointing at a plugin that is gone, so this takes them out -
+# and has to run first, because uninstalling deletes this script with everything
+# else.
+[[actions]]
+id = "uninstall"
+title = "Remove keybindings"
+contexts = ["pane", "workspace"]
+command = ["python3", "uninstall.py"]
+
 # The popup surface. placement = "popup" keeps it transient: it takes all
 # terminal input, including Escape, and closes when the pager exits, without
 # disturbing the tiled layout.

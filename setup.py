@@ -25,6 +25,7 @@ import tomllib
 from datetime import datetime
 from pathlib import Path
 
+import guard
 from keycaps import config_path, herdr_bin
 
 ROOT = Path(__file__).resolve().parent
@@ -225,23 +226,32 @@ def main() -> int:
             return 0
 
     text = path.read_text() if path.exists() else ""
+    remedy = [
+        f"open {path} and add the lines listed above by hand",
+        f"they are also in {BINDINGS}, which is the keymap this plugin expects",
+        "then run: herdr server reload-config",
+    ]
+
+    # Checked before the file is opened for writing, so a refusal leaves nothing
+    # to undo. Editing someone's whole herdr setup wrongly is worse than not
+    # editing it at all.
+    reason = guard.unsupported_shape(text, cfg) if text else None
+    if reason:
+        return guard.refuse(reason, path, remedy)
+
+    new = merged(text, add_keys, add_cmds)
+    want = guard.expected(cfg, add_keys, [], add_cmds, [])
+    reason = guard.unexplained_change(new, want)
+    if reason:
+        return guard.refuse(reason, path, remedy)
+
     backup = None
     if text:
         backup = path.with_suffix(f".toml.bak-{datetime.now():%Y%m%dT%H%M%S}")
         shutil.copy2(path, backup)
     else:
         path.parent.mkdir(parents=True, exist_ok=True)
-
-    new = merged(text, add_keys, add_cmds)
     path.write_text(new)
-    try:
-        tomllib.loads(new)
-    except tomllib.TOMLDecodeError as error:
-        if backup:
-            shutil.copy2(backup, path)
-        print(f"wrote invalid TOML and rolled back: {error}", file=sys.stderr)
-        return 1
-
     print(f"Written. Backup: {backup}" if backup else "Written (new file).")
     run_herdr()
     return 0
