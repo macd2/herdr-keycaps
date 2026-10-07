@@ -1,12 +1,22 @@
 id = "macd2.keycaps"
 name = "Keycaps"
-version = "1.0.0"
+version = "1.1.0"
 # 0.9.3 is the version this was built and verified against. The changelog
 # does not record when popup panes or layout.set_split_ratio landed, so a
 # lower floor would be a guess that fails on someone else's machine.
 min_herdr_version = "0.9.3"
 description = "The faster way to drive herdr: every binding one keypress away, plus the pane moves herdr leaves to the CLI"
 platforms = ["linux", "macos"]
+
+# One-time setup. A plugin manifest has no field for a keybinding and
+# `herdr plugin install` never touches config.toml, so a fresh machine has every
+# action below and no key that reaches one. This merges bindings.toml into the
+# user's config, skipping anything they already bound.
+[[actions]]
+id = "setup"
+title = "Set up keybindings"
+contexts = ["pane", "workspace"]
+command = ["python3", "setup.py"]
 
 # The popup surface. placement = "popup" keeps it transient: it takes all
 # terminal input, including Escape, and closes when the pager exits, without

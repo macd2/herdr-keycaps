@@ -39,9 +39,34 @@ the next key is pressed, so no row needs a second lookup.
 
 ```sh
 herdr plugin install macd2/herdr-keycaps
+python3 ~/.config/herdr/plugins/github/macd2.keycaps-*/setup.py
 ```
 
-Then bind it in `~/.config/herdr/config.toml`:
+The second line is not optional, and it is the step people miss. A herdr plugin
+manifest has no field for a keybinding and `herdr plugin install` never touches
+`config.toml`, so after the first line alone every action is registered and no
+key reaches any of them. That looks exactly like a broken install.
+
+`setup.py` merges [`bindings.toml`](bindings.toml) into your
+`~/.config/herdr/config.toml`: this plugin's seven bindings, plus the
+single-modifier `alt+` layer for herdr's own actions that fills the KEYCAPS
+column. It backs the file up first, keeps your comments and ordering, adds only
+what is missing, and leaves any chord you already spent where it is, naming it
+on the way out. Running it twice changes nothing.
+
+```sh
+python3 .../setup.py --dry-run           # print the plan, write nothing
+python3 .../setup.py --only-plugin-keys  # this plugin's keys, not the alt+ layer
+```
+
+From inside a session you can reach the same script without the path:
+
+```sh
+herdr plugin action invoke macd2.keycaps.setup
+```
+
+To bind it by hand instead, a block looks like this - it names the plugin, not a
+script path, so it is identical on every machine:
 
 ```toml
 [[keys.command]]
@@ -51,12 +76,7 @@ command = "macd2.keycaps.show"
 description = "Show all keybindings"
 ```
 
-```sh
-herdr server reload-config
-```
-
-The binding names the plugin, not a script path, so this block is identical on
-every machine.
+followed by `herdr server reload-config`.
 
 ## Attaching from a remote client
 

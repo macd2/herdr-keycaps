@@ -1,0 +1,91 @@
+# The keymap Keycaps is built around.
+#
+# A herdr plugin ships behaviour, never keys: the manifest has no field for a
+# binding and `herdr plugin install` never touches config.toml. So this file is
+# the keymap as data, and `setup.py` merges whatever is missing into the user's
+# own config without disturbing what is already there.
+#
+# Two groups, applied independently:
+#
+#   [keys]            herdr's own actions on a single-modifier layer. Optional.
+#                     Skip with `setup.py --only-plugin-keys`.
+#   [[keys.command]]  this plugin's actions. Without these nothing in Keycaps
+#                     can be reached at all.
+
+# Single-modifier direct layer. Letters avoid the alt+ combos readline binds
+# (b c d f g l n p r t u x y) and i/j/m, which collide with Tab/LF/CR. Over a
+# remote attach these need `herdr --remote <target> --remote-keybindings server`
+# or none of them fire, silently.
+[keys]
+focus_pane_left  = ["prefix+h", "alt+left"]
+focus_pane_down  = ["prefix+j", "alt+down"]
+focus_pane_up    = ["prefix+k", "alt+up"]
+focus_pane_right = ["prefix+l", "alt+right"]
+switch_tab       = ["prefix+1..9", "alt+1..9"]
+new_tab          = ["prefix+c", "alt+t"]
+close_tab        = ["prefix+shift+x", "alt+shift+backspace"]
+rename_tab       = ["prefix+shift+t", "alt+shift+r"]
+previous_tab     = ["prefix+p", "alt+w"]
+next_tab         = ["prefix+n", "alt+e"]
+close_pane       = ["prefix+x", "alt+shift+q"]
+zoom             = ["prefix+z", "alt+z"]
+resize_mode      = "prefix+r"
+resize_pane_up    = "ctrl+up"
+resize_pane_down  = "ctrl+down"
+resize_pane_right = "ctrl+right"
+resize_pane_left  = "ctrl+left"
+rename_pane      = ["prefix+shift+p", "alt+r"]
+split_vertical   = ["prefix+v", "alt+period"]
+split_horizontal = ["prefix+minus", "alt+comma"]
+goto             = ["prefix+g", "alt+g"]
+workspace_picker = "prefix+w"
+rename_workspace = "prefix+shift+w"
+previous_workspace = "alt+shift+w"
+next_workspace     = "alt+shift+s"
+new_workspace    = ["prefix+shift+n", "alt+shift+n"]
+close_workspace  = ["prefix+shift+d", "alt+backspace"]
+
+# The popup itself.
+[[keys.command]]
+key = "alt+h"
+type = "plugin_action"
+command = "macd2.keycaps.show"
+description = "Show all keybindings"
+
+# Pane moves herdr has no built-in actions for: move_tab_* move whole tabs,
+# and swapping is CLI-only.
+[[keys.command]]
+key = "alt+m"
+type = "plugin_action"
+command = "macd2.keycaps.move"
+description = "Move pane to another tab or workspace"
+
+[[keys.command]]
+key = "alt+shift+up"
+type = "plugin_action"
+command = "macd2.keycaps.swap-up"
+description = "Swap pane up"
+
+[[keys.command]]
+key = "alt+shift+down"
+type = "plugin_action"
+command = "macd2.keycaps.swap-down"
+description = "Swap pane down"
+
+[[keys.command]]
+key = "alt+shift+right"
+type = "plugin_action"
+command = "macd2.keycaps.swap-right"
+description = "Swap pane right"
+
+[[keys.command]]
+key = "alt+shift+left"
+type = "plugin_action"
+command = "macd2.keycaps.swap-left"
+description = "Swap pane left"
+
+[[keys.command]]
+key = "alt+shift+enter"
+type = "plugin_action"
+command = "macd2.keycaps.even"
+description = "Even out panes"
