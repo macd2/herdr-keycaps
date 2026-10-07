@@ -180,9 +180,21 @@ list often fits one screen, and `-F` would flash the popup open and shut.
 An action that no group knows about still renders, under `OTHER`, so a binding
 added by a future herdr release is never silently dropped.
 
+## Listing it
+
+The herdr marketplace indexes public GitHub repositories tagged with the topic
+`herdr-plugin` whose default branch carries a `herdr-plugin.toml` with
+parseable required metadata. Discovery is automatic and unreviewed, refreshing
+every 30 minutes, and it skips forks and archived repositories.
+
+`tests/test_manifest.py` checks what that index parses: the required fields, id
+rules, platform values, and that every command names a file that exists. A typo
+there is an invisible delisting rather than an error anyone sees.
+
 ## Tests
 
 ```sh
+python3 tests/test_manifest.py     # required metadata the marketplace parses
 python3 tests/test_grouping.py     # group order, custom first, unknown actions kept
 python3 tests/test_popup_pager.py  # stays open on a real pty, exits 0 on q
 python3 tests/test_show_action.py  # action opens the right pane, opens no popup
