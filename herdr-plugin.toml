@@ -2,7 +2,7 @@ id = "macd2.keycaps"
 name = "Keycaps"
 version = "1.0.0"
 min_herdr_version = "0.9.0"
-description = "Your herdr keymap: a popup listing every binding in effect, plus the pane moves herdr has no actions for"
+description = "The faster way to drive herdr: every binding one keypress away, plus the pane moves herdr leaves to the CLI"
 platforms = ["linux", "macos"]
 
 # The popup surface. placement = "popup" keeps it transient: it takes all

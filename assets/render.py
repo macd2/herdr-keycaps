@@ -199,8 +199,8 @@ def make_banner(path: Path, w: int = 1200, h: int = 630):
     tracked(d, (64, 168), "Keycaps", sans(62), TEXT, -0.5)
     d.rounded_rectangle([66, 248, 66 + 56, 253], radius=3, fill=TEAL)
     tag = ImageFont.truetype(MONO, 17)
-    for i, line in enumerate(("every herdr binding",
-                              "in effect, one keypress", "away")):
+    for i, line in enumerate(("the faster way",
+                              "to drive herdr")):
         d.text((66, 282 + i * 26), line, font=tag, fill=SUBTEXT)
 
     kf = ImageFont.truetype(MONO_BOLD, 20)

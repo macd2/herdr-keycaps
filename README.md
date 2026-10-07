@@ -1,16 +1,19 @@
 <p align="center">
-  <img src="assets/banner.png" alt="Keycaps. Every herdr binding in effect, one keypress away" width="100%">
+  <img src="assets/banner.png" alt="Keycaps. The faster way to drive herdr" width="100%">
 </p>
 
 # Keycaps
 
-Your herdr keymap, and the pane moves herdr has no actions for.
+The faster way to drive herdr.
 
-One key pops up every keybinding in effect. That covers herdr's defaults, your
-overrides, and your own custom commands. They are grouped by how often you
-reach for them, and searchable through the pager. Two more keys move the
-focused pane: into another tab from a popup list, or around inside the tab it
-is already in.
+Keycaps keeps your hands on the keyboard. One key shows every binding currently
+in effect, ordered by how often you reach for it, so you stop guessing at
+chords you set up weeks ago and stop breaking flow to look them up. A few more
+keys do the pane work herdr only exposes on the command line: send a pane to
+another tab or workspace, swap it with its neighbour, even out the splits.
+
+Nothing to configure beyond the bindings you want. The list builds itself from
+your own config, so it is right the moment you change a key.
 
 <p align="center">
   <img src="assets/screenshot.png" alt="The Keycaps popup listing every binding, grouped by panes, tabs, workspaces and session" width="620">
