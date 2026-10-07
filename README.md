@@ -89,6 +89,45 @@ description = "Show all keybindings"
 
 followed by `herdr server reload-config`.
 
+## Uninstall
+
+Run this **before** uninstalling, because uninstalling deletes the script with
+everything else:
+
+```sh
+python3 ~/.config/herdr/plugins/github/macd2.keycaps-*/uninstall.py
+herdr plugin uninstall macd2.keycaps
+```
+
+`herdr plugin uninstall` removes the code and nothing else, so without the first
+line the seven `[[keys.command]]` blocks stay behind, bound to a plugin that is
+no longer there.
+
+It takes out this plugin's bindings only. The `[keys]` layer `setup.py` may have
+written binds *herdr's own* actions, which keep working with this plugin gone, so
+removing it would break a working config to tidy up. `--also-direct-layer` takes
+that too, and only where the value still matches
+[`bindings.toml`](bindings.toml) - anything you have retuned since is yours and
+stays, named on the way out. `--dry-run` prints what would go. The file is backed
+up first, and your comments, ordering and other settings are left where they are.
+
+Stock config, `setup.py`, then `uninstall.py --also-direct-layer` gives back the
+original file byte for byte.
+
+### Both scripts would rather fail than mangle your config
+
+Your whole herdr setup lives in that file, so a wrong edit is worse than no edit.
+Both state what they intend, build the result in memory, re-parse it and compare
+it against that intent before anything is written. One unexplained difference -
+another table changed, a value that came out wrong, output that is not valid TOML
+- and nothing is written at all. Shapes a line-based edit cannot see are refused
+rather than guessed at: a `keys.command` inline array, a value spread over
+several lines. A config that does not parse is refused untouched.
+
+A refusal exits 1 and prints the reason, your config's path, and the steps to do
+it by hand - addressed to an agent, telling it to ask you first rather than
+editing the file to get past the refusal.
+
 ## Attaching from a remote client
 
 **If you attach with `herdr --remote`, you must pass `--remote-keybindings server`
