@@ -14,6 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+import harness  # noqa: E402
 import swap  # noqa: E402
 
 # Behaves like herdr: answers `pane current`, records each swap argv, and
@@ -56,8 +57,8 @@ def main() -> int:
         stub.chmod(0o755)
         log = tmp / "argv"
 
-        env = {**os.environ, "HERDR_BIN_PATH": str(stub), "ARGV_LOG": str(log),
-               "HERDR_PLUGIN_ACTION_ID": "swap-up"}
+        env = harness.clean_env(HERDR_BIN_PATH=str(stub), ARGV_LOG=str(log),
+                                HERDR_PLUGIN_ACTION_ID="swap-up")
         result = subprocess.run([sys.executable, "swap.py"], cwd=ROOT, env=env,
                                 capture_output=True, text=True, timeout=10)
         assert result.returncode == 0, result.stderr
