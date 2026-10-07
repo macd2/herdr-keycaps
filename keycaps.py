@@ -16,6 +16,11 @@ import sys
 import tomllib
 from pathlib import Path
 
+# The key plumbing every popup here shares: raw mode held for the whole
+# session, one key per read, and a bare Escape told apart from an arrow by
+# whether more bytes follow it. confirm.py takes the same three.
+from picker import classify, raw_mode, read_key
+
 # A commented default such as `# focus_pane_left = "prefix+h"`. Prose in that
 # file can also read like an assignment, so the value is validated separately.
 DEFAULT_LINE = re.compile(r"^#\s*([a-z_]+)\s*=\s*(.+)$")
@@ -381,29 +386,109 @@ def render(path: Path) -> list[str]:
 
 
 def document(path: Path) -> str:
-    """The whole popup as one string, header and footer included.
+    """The list as one plain string, for piped output.
 
-    main() pages this; the asset renderer draws it. One source, so a published
-    screenshot cannot drift from what the popup actually shows.
+    The popup pages render() directly and draws its own status line, so the
+    key hint lives in one place: the surface where keys mean anything.
     """
-    lines = [""] + render(path) + ["", f"  {paint('q to close', DIM)}", ""]
-    return "\n".join(lines) + "\n"
+    return "\n".join([""] + render(path) + [""]) + "\n"
+
+
+HIDE_CURSOR, SHOW_CURSOR = "\033[?25l", "\033[?25h"
+
+
+def scroll_intent(key: str) -> str:
+    """One key -> a paging intent. Pure, so the key map is testable.
+
+    Scroll keys first, then picker's shared map, which already tells a bare
+    Escape from an arrow and closes on q and ctrl+c.
+    """
+    if not key:
+        # stdin is at EOF: nothing further can arrive to dismiss the popup.
+        return "cancel"
+    if key in ("\x1b[6~", " ", "\x06"):
+        return "page_down"
+    if key in ("\x1b[5~", "b", "\x02"):
+        return "page_up"
+    if key in ("g", "\x1b[H", "\x1b[1~"):
+        return "top"
+    if key in ("G", "\x1b[F", "\x1b[4~"):
+        return "bottom"
+    return classify(key)
+
+
+def scrolled(top: int, action: str, view: int, total: int) -> int:
+    """Where the viewport lands after one key, clamped to the list. Pure."""
+    last = max(0, total - view)
+    if action == "top":
+        return 0
+    if action == "bottom":
+        return last
+    step = {"down": 1, "enter": 1, "up": -1,
+            "page_down": view, "page_up": -view}.get(action, 0)
+    return max(0, min(top + step, last))
+
+
+def viewport() -> int:
+    """Rows the popup actually has.
+
+    The terminal's own size, not $LINES: a popup inherits that from the pane
+    that opened it, which is a different height.
+    """
+    try:
+        return os.get_terminal_size(sys.stdout.fileno()).lines
+    except OSError:
+        return 24
+
+
+def frame(body: list[str], top: int, view: int) -> str:
+    """One screenful, padded to `view` rows, with the status line beneath.
+
+    Exactly as many lines as the terminal has rows, and no trailing newline,
+    so drawing a frame never scrolls the top of the list away.
+    """
+    shown = body[top:top + view]
+    shown += [""] * (view - len(shown))
+    hint = "esc to close"
+    if len(body) > view:
+        hint = f"\u2191\u2193 to scroll \u00b7 {hint}"
+    return "\033[H\033[2J" + "\r\n".join(shown + [f"  {paint(hint, DIM)}"])
+
+
+def page(body: list[str]) -> None:
+    """Hold the popup open until Escape, scrolling in place until then.
+
+    less would be the obvious pager, but it cannot be told to close on
+    Escape: there Escape is the prefix of an escape sequence rather than a
+    key, and rebinding it needs --lesskey-src, which arrived in less 582 while
+    macOS still ships 581. So the popup pages itself.
+    """
+    top = 0
+    with raw_mode():
+        sys.stdout.write(HIDE_CURSOR)
+        try:
+            while True:
+                view = max(viewport() - 1, 1)  # the status line keeps a row
+                # Re-clamp every frame: the terminal may have been resized
+                # since the last one, leaving the viewport past the end.
+                top = scrolled(top, "", view, len(body))
+                sys.stdout.write(frame(body, top, view))
+                sys.stdout.flush()
+                action = scroll_intent(read_key())
+                if action == "cancel":
+                    return
+                top = scrolled(top, action, view, len(body))
+        finally:
+            sys.stdout.write(SHOW_CURSOR + "\r\n")
+            sys.stdout.flush()
 
 
 def main() -> int:
-    text = document(config_path())
-
-    pager = shutil.which("less")
-    if pager and sys.stdout.isatty():
-        # -R keeps colour. No -F: the cheatsheet often fits the popup, and
-        # quitting on a full screen would flash the popup open and shut.
-        # less reads keys from /dev/tty, so the piped input does not block q.
-        try:
-            subprocess.run([pager, "-R"], input=text, text=True, check=False)
-            return 0
-        except OSError:
-            pass
-    sys.stdout.write(text)
+    path = config_path()
+    if sys.stdout.isatty():
+        page([""] + render(path))
+        return 0
+    sys.stdout.write(document(path))
     return 0
 
 

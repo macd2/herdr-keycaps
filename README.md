@@ -173,9 +173,13 @@ alt+h  ->  action "show"  ->  show.py  ->  herdr plugin pane open
 ```
 
 `placement = "popup"` lives in the manifest rather than on the open request,
-because the CLI's `--placement` flag has no `popup` value. The popup closes
-when the pager exits, so the pager deliberately does not pass `less -F`: the
-list often fits one screen, and `-F` would flash the popup open and shut.
+because the CLI's `--placement` flag has no `popup` value. A popup takes all
+terminal input, Escape included, and closes the moment its command exits, so
+the list is paged in-process: Escape closes it, `q` and `ctrl+c` too, and
+arrows, page keys, `g` and `G` scroll when it does not fit. `less` is not used
+for this, because there Escape is the prefix of an escape sequence rather than
+a key, and rebinding it needs `--lesskey-src`, which arrived in less 582 while
+macOS still ships 581.
 
 An action that no group knows about still renders, under `OTHER`, so a binding
 added by a future herdr release is never silently dropped.
@@ -196,7 +200,7 @@ there is an invisible delisting rather than an error anyone sees.
 ```sh
 python3 tests/test_manifest.py     # required metadata the marketplace parses
 python3 tests/test_grouping.py     # group order, custom first, unknown actions kept
-python3 tests/test_popup_pager.py  # stays open on a real pty, exits 0 on q
+python3 tests/test_popup_pager.py  # stays open on a real pty, closes on esc
 python3 tests/test_show_action.py  # action opens the right pane, opens no popup
 ```
 
