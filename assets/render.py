@@ -187,51 +187,93 @@ def make_banner(path: Path, w: int = 1200, h: int = 630):
     return path
 
 
-def make_screenshot(path: Path, pad: int = 30, fs: int = 21):
-    """The popup as a figure on the page.
+def make_cheatsheet(path: Path):
+    """The keymap as a printed reference card, not a photograph of a terminal.
 
-    The terminal keeps its own colours, because this documents what the plugin
-    actually shows. Everything around it belongs to the brand: paper margin,
-    hairline frame, a numbered caption the way a manual carries one.
+    Typeset from keycaps.entries(), the same rows the popup formats, so the
+    card cannot drift from the plugin. Column widths are measured from the
+    longest string in each column rather than guessed, and the page is sized
+    to fit them.
     """
-    keycaps.colour_enabled = lambda: True
-    text = keycaps.document(keycaps.config_path()).rstrip("\n")
-    lines = text.split("\n")
+    rows, prefix_key = keycaps.entries(keycaps.config_path())
 
-    font = ImageFont.truetype(MONO, fs)
-    bold = ImageFont.truetype(MONO_BOLD, fs)
-    cw = font.getlength("M")
-    lh = int(fs * 1.55)
-    cols = max(len(ANSI.sub("", l)) for l in lines)
+    key_font = data(18)
+    pre_font = data(18)
+    txt_font = display(18, 500)
+    sec_font = display(17, 700)
+    legend_font = data(14)
 
-    inner_w = int(cols * cw) + pad * 2
-    inner_h = lh * len(lines) + pad * 2
-    margin = 46
-    caption = 54
-    w = inner_w + margin * 2
-    h = inner_h + margin * 2 + caption
+    pad = 26
+    key_w = max([key_font.getlength(r[1]) for r in rows] + [legend_font.getlength("DIRECT")])
+    pre_w = max([pre_font.getlength(r[2]) for r in rows] + [legend_font.getlength("VIA PREFIX")])
+    txt_w = max(txt_font.getlength(r[3]) for r in rows)
+    col_w = int(key_w + pad + pre_w + pad + txt_w)
+    key_x, pre_x, txt_x = 0, int(key_w + pad), int(key_w + pad + pre_w + pad)
+
+    m, gutter = 64, 76
+    w = m * 2 + col_w * 2 + gutter
+    line_h, head_h, top = 30, 46, 250
+
+    # Whole sections only: a group split across columns is harder to scan.
+    blocks, current = [], None
+    for section, direct, leader, text in rows:
+        if current is None or current[0] != section:
+            current = (section, [])
+            blocks.append(current)
+        current[1].append((direct, leader, text))
+
+    def block_h(b):
+        return head_h + len(b[1]) * line_h + 20
+
+    # Pick the split that makes the two columns most even.
+    heights = [block_h(b) for b in blocks]
+    best = min(range(1, len(blocks)),
+               key=lambda i: abs(sum(heights[:i]) - sum(heights[i:])))
+    left, right = blocks[:best], blocks[best:]
+    body_h = max(sum(heights[:best]), sum(heights[best:]))
+    h = top + body_h + 92
 
     img = Image.new("RGB", (w, h), PAPER)
     d = ImageDraw.Draw(img)
+    d.rectangle([0, 0, w, 11], fill=RED)
 
-    # Hairline frame, one red tick at the datum corner.
-    d.rectangle([margin - 1, margin - 1, margin + inner_w, margin + inner_h],
-                fill=BASE, outline=INK, width=1)
-    d.line([(margin - 1, margin - 15), (margin - 1, margin - 1)], fill=RED, width=2)
-    d.line([(margin - 15, margin - 1), (margin - 1, margin - 1)], fill=RED, width=2)
+    tracked(d, (m, 66), "Keycaps", display(62, 800), INK, -1.4)
+    d.text((m + 3, 150), "Keymap reference", font=display(22, 600), fill=INK)
+    trigger = data(16)
+    label = f"press  alt+h  /  prefix is {prefix_key}"
+    d.text((w - m - trigger.getlength(label), 156), label, font=trigger, fill=GREY)
+    d.line([(m, 196), (w - m, 196)], fill=INK, width=2)
 
-    y = margin + pad
-    for line in lines:
-        x = margin + pad
-        for run, is_bold, colour in spans(line):
-            d.text((x, y), run, font=bold if is_bold else font, fill=colour)
-            x += font.getlength(run)
-        y += lh
+    for x in (m, m + col_w + gutter):
+        d.text((x + key_x, 212), "DIRECT", font=legend_font, fill=GREY)
+        d.text((x + pre_x, 212), "VIA PREFIX", font=legend_font, fill=GREY)
 
-    cap_font = data(17)
-    cy = margin + inner_h + 20
-    d.text((margin, cy), "Fig. 1", font=cap_font, fill=RED)
-    d.text((margin + 70, cy), "alt+h, every binding in effect", font=cap_font, fill=GREY)
+    def draw_column(x, blocks_):
+        y = top
+        for section, items in blocks_:
+            tracked(d, (x, y), section, sec_font, INK, 1.4)
+            d.line([(x, y + 27), (x + col_w, y + 27)], fill=RULE, width=1)
+            y += head_h
+            for direct, leader, text in items:
+                if direct:
+                    d.text((x + key_x, y), direct, font=key_font, fill=INK)
+                if leader:
+                    d.text((x + pre_x, y), leader, font=pre_font, fill=GREY)
+                d.text((x + txt_x, y), text, font=txt_font, fill=INK)
+                y += line_h
+            y += 20
+
+    draw_column(m, left)
+    draw_column(m + col_w + gutter, right)
+
+    fy = h - 56
+    d.line([(m, fy), (w - m, fy)], fill=RULE, width=1)
+    foot = data(15)
+    tracked(d, (m, fy + 20), "KEYCAPS", foot, INK, 1.6)
+    d.text((m + 150, fy + 20), "built from herdr --default-config + config.toml",
+           font=foot, fill=GREY)
+    tail = f"{len(rows)} rows"
+    d.text((w - m - foot.getlength(tail), fy + 20), tail, font=foot, fill=GREY)
 
     img.save(path)
     return path
@@ -241,6 +283,6 @@ if __name__ == "__main__":
     here = Path(__file__).resolve().parent
     for made in (make_logo(here / "logo.png"),
                  make_banner(here / "banner.png"),
-                 make_screenshot(here / "screenshot.png")):
+                 make_cheatsheet(here / "cheatsheet.png")):
         img = Image.open(made)
         print(f"{made.name:16} {img.width}x{img.height}")
