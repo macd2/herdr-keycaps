@@ -5,11 +5,12 @@ Running the real command would leave a modal popup open in the live session, so
 this points HERDR_BIN_PATH at a stub that records its argv instead.
 """
 
-import os
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+
+import harness
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -26,7 +27,7 @@ def main() -> int:
         stub.chmod(0o755)
         log = tmp / "argv"
 
-        env = {**os.environ, "HERDR_BIN_PATH": str(stub), "ARGV_LOG": str(log)}
+        env = harness.clean_env(HERDR_BIN_PATH=str(stub), ARGV_LOG=str(log))
         result = subprocess.run(
             [sys.executable, "show.py"], cwd=ROOT, env=env,
             capture_output=True, text=True, timeout=10,

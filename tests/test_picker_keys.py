@@ -22,6 +22,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
+import harness  # noqa: E402
 import picker  # noqa: E402
 
 TABS = {"result": {"tabs": [
@@ -64,10 +65,11 @@ def drive(keys: list[bytes], tmp: Path) -> tuple[bytes, list[str]]:
     log.unlink(missing_ok=True)
     pid, fd = pty.fork()
     if pid == 0:
-        os.environ.update({"HERDR_BIN_PATH": str(tmp / "herdr-stub"),
-                           "FIXTURES": str(tmp), "ARGV_LOG": str(log),
-                           "TERM": "xterm-256color"})
-        os.environ.pop("HERDR_PLUGIN_CONTEXT_JSON", None)
+        env = harness.clean_env(
+            HERDR_BIN_PATH=str(tmp / "herdr-stub"), FIXTURES=str(tmp),
+            ARGV_LOG=str(log), TERM="xterm-256color")
+        os.environ.clear()
+        os.environ.update(env)
         fcntl.ioctl(0, termios.TIOCSWINSZ, struct.pack("HHHH", 24, 80, 0, 0))
         os.chdir(ROOT)
         os.execvp(sys.executable, [sys.executable, "picker.py"])
