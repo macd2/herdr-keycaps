@@ -35,7 +35,7 @@ def main() -> int:
 
     # Every command must name a file that exists, or the binding fails at press
     # time with nothing in the manifest to show why.
-    for kind in ("actions", "panes", "startup", "build"):
+    for kind in ("actions", "panes", "startup", "build", "events", "link_handlers"):
         for entry in m.get(kind, []):
             argv = entry.get("command", [])
             scripts = [a for a in argv if a.endswith(".py")]
@@ -47,7 +47,8 @@ def main() -> int:
     assert m.get("description", "").strip(), "description is what the card shows"
 
     print(f"PASS: manifest valid for the marketplace "
-          f"({len(m.get('actions', []))} actions, {len(m.get('panes', []))} panes)")
+          f"({len(m.get('actions', []))} actions, {len(m.get('panes', []))} panes, "
+          f"{len(m.get('startup', []))} startup)")
     return 0
 
 
