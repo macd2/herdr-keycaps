@@ -1,7 +1,10 @@
 id = "macd2.keycaps"
 name = "Keycaps"
 version = "1.0.0"
-min_herdr_version = "0.9.0"
+# 0.9.3 is the version this was built and verified against. The changelog
+# does not record when popup panes or layout.set_split_ratio landed, so a
+# lower floor would be a guess that fails on someone else's machine.
+min_herdr_version = "0.9.3"
 description = "The faster way to drive herdr: every binding one keypress away, plus the pane moves herdr leaves to the CLI"
 platforms = ["linux", "macos"]
 
