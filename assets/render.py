@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Draw the release assets: logo, banner, screenshot.
 
-The screenshot is rendered from keycaps.document(), the same string the popup
-pages, so a published image cannot drift from what the plugin actually shows.
+The reference card is typeset from keycaps.entries(), the same rows the popup
+formats, so a published image cannot drift from what the plugin actually shows.
 Palette is Catppuccin Mocha, matching the herdr theme this was built against.
 
     python3 assets/render.py
