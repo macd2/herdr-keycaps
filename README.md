@@ -1,15 +1,16 @@
 <p align="center">
-  <img src="assets/banner.png" alt="Keycaps — every herdr binding in effect, one keypress away" width="100%">
+  <img src="assets/banner.png" alt="Keycaps. Every herdr binding in effect, one keypress away" width="100%">
 </p>
 
 # Keycaps
 
 Your herdr keymap, and the pane moves herdr has no actions for.
 
-One key pops up every keybinding in effect — herdr's defaults, your overrides,
-and your own custom commands — grouped by how often you reach for them, and
-searchable through the pager. Two more keys move the focused pane: into another
-tab from a popup list, or around inside the tab it is already in.
+One key pops up every keybinding in effect. That covers herdr's defaults, your
+overrides, and your own custom commands. They are grouped by how often you
+reach for them, and searchable through the pager. Two more keys move the
+focused pane: into another tab from a popup list, or around inside the tab it
+is already in.
 
 <p align="center">
   <img src="assets/screenshot.png" alt="The Keycaps popup listing every binding, grouped by panes, tabs, workspaces and session" width="620">
@@ -26,10 +27,10 @@ either way.
 Three columns, and the title doubles as their heading: **KEYCAPS** is what your
 config adds, **PREFIX** is herdr's stock binding for the same action. Keeping
 them apart means the chord you actually reach for lines up down the page
-instead of being pushed around by longer prefix forms — and an action with
-nothing under KEYCAPS is one still waiting for a direct chord. `prefix+h` is spelled
-out as `ctrl+b h` — a space, because the prefix is released before the next
-key — so no row needs a second lookup.
+instead of being pushed around by longer prefix forms. An action with nothing
+under KEYCAPS is one still waiting for a direct chord. `prefix+h` is spelled out
+as `ctrl+b h`. The space is deliberate, because the prefix is released before
+the next key is pressed, so no row needs a second lookup.
 
 ## Install
 
@@ -64,18 +65,18 @@ herdr --remote <target> --remote-keybindings server
 ```
 
 `herdr --remote` uses your **local** keybindings by default, and local custom
-command bindings are never sent to the remote host — so a binding for this
-plugin only fires when the server's keyset is the active one.
+command bindings are never sent to the remote host. A binding for this plugin
+only fires when the server's keyset is the active one.
 
 This fails silently, which is what makes it worth knowing: `herdr config check`
 prints `config: ok`, `herdr server reload-config` reports `applied`, the plugin
-links fine and lists its actions — and no key does anything. There is no
+links fine and lists its actions. No key does anything. There is no
 warning anywhere to tell you the config you just edited is being ignored.
 
 ## Moving panes
 
 Herdr can move and swap panes from the CLI but exposes no keybinding actions
-for either — `move_tab_previous`/`move_tab_next` move whole tabs, not panes.
+for either. `move_tab_previous` and `move_tab_next` move whole tabs, not panes.
 These bindings close that gap:
 
 ```toml
@@ -118,7 +119,7 @@ A tab id already names its workspace, so crossing workspaces needs only
 `--tab`; `--workspace` is for `--new-tab`.
 
 Moving into an existing tab passes `--split right`, because herdr rejects
-`--tab` without a placement — that tab already has panes and it needs to know
+`--tab` without a placement. That tab already has panes, so it needs to know
 where yours lands.
 
 `alt+shift+h/j/k/l` swap the focused pane with its neighbour. Hold the same
@@ -138,8 +139,8 @@ misbehaving swap cannot spin forever.
 ## Evening out panes
 
 `alt+shift+e` sets every split in the tab back to half. Herdr has no action,
-keybinding or CLI for this — `pane resize` only shifts a divider by a relative
-amount — so this one goes through the socket API's `layout.set_split_ratio`:
+keybinding or CLI for this. `pane resize` only shifts a divider by a relative
+amount, so this one goes through the socket API's `layout.set_split_ratio`:
 
 ```toml
 [[keys.command]]
@@ -198,7 +199,7 @@ MIT
 The wordmark is IBM Plex Sans, vendored under `assets/fonts/` with its OFL
 licence so the assets rebuild anywhere. Everything showing a terminal stays in
 the mono face the terminal actually uses. The screenshot comes
-from `keycaps.document()` — the same string the popup pages — so a published
+from `keycaps.document()`, the same string the popup pages, so a published
 image cannot drift from what the plugin actually shows.
 
 ```sh
